@@ -3,47 +3,25 @@
  $ npm install readline-sync
 */
 
+const state = require('./robots/state.js')
 
-const readline = require('readline-sync')
 const robots = {
     //userInput: require('./robots/user-input.js'),
-    text: require('./robots/text.js')
+    input: require('./robots/inputs.js'),
+    text: require('./robots/text.js'),
+    state: require('./robots/state.js')
 }
 
 async function start(){
-    //contúdo
-    const content = {
-        //define o maximo de senteças
-        maximunSentences: 7
-    }
-
-    //Termo de busca
-    //Prefixo - para ficar mais humanamente legivel
-    content.searchTerm = askAndReturnSearchTerm()
-    content.prefix = askAndReturnPrefix()
 
     //Robôs
-    //robots.userInput(content)
-    await robots.text(content)
-
-    //Recebe o termo da busca
-    function askAndReturnSearchTerm(){
-        return readline.question('Type a Wikipedia search term: ')
-    }
-
-    //Retorna uma lista de opção
-    function askAndReturnPrefix(){
-        //Opções de busca, o que eu quero procurar na net ?
-        //Faz a leitura da tecla precionada
-        //Pega o prefixes de acordo com o index
-        const prefixes = ['Who is', 'What is', 'The history of']
-        const selectedPrefixIndex = readline.keyInSelect(prefixes)
-        const selectedPrefixText = prefixes[selectedPrefixIndex]
-
-        return selectedPrefixText
-    }
+    robots.input()
+    await robots.text()
     
-    console.log(JSON.stringify(content, null, 4))
+    const content = robots.state.load()
+    //imprime que nem o log porem de uma forma mais bonita
+    //usando o dir com depth: null
+    console.dir(content, {depth: null})
 }
 
 start()

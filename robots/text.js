@@ -15,17 +15,21 @@ const algorithimiaApiKey = require('../credentials/algorithimia.json').apiKey
 const sentenceBoundaryDetection = require('sbd')
 const watsonApiKey = require('../credentials/watson-nlu.json').apikey
 const NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
+
  
-var nlu = new NaturalLanguageUnderstandingV1({
+const nlu = new NaturalLanguageUnderstandingV1({
     iam_apikey: watsonApiKey,
     version: '2019-02-01',
     url: 'https://gateway.watsonplatform.net/natural-language-understanding/api/'
-  })
+})
 
-
+const state = require('./state.js')
 
 //Função async pq tem que aguardar os dados serem buscados e retornados
-async function robot(content){
+async function robot(){
+    //carrega os dados que foi salvo em um arquivo
+    const content = state.load()
+
     //Pesquisa na Wikipedia
     //Divide o texto em sentenças
     //Limpa o toda a pesquisa
@@ -36,6 +40,9 @@ async function robot(content){
     breakContentIntoSentences(content)
     limitMaximunSenteces(content)
     await fetchKeywordsOfAllSentences(content)
+
+    //salva os dados
+    state.save(content)
 
     async function fetchContentFromWikiPedia(content){
         const algorithmiaAuthenticated = algorithmia(algorithimiaApiKey)
