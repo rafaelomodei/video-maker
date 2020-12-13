@@ -5,9 +5,12 @@
 
 
 const readline = require('readline-sync')
+const robots = {
+    //userInput: require('./robots/user-input.js'),
+    text: require('./robots/text.js')
+}
 
-
-function start(){
+async function start(){
     //contúdo
     const content = {}
 
@@ -15,6 +18,10 @@ function start(){
     //Prefixo - para ficar mais humanamente legivel
     content.searchTerm = askAndReturnSearchTerm()
     content.prefix = askAndReturnPrefix()
+
+    //Robôs
+    //robots.userInput(content)
+    await robots.text(content)
 
     //Recebe o termo da busca
     function askAndReturnSearchTerm(){
@@ -32,7 +39,7 @@ function start(){
 
         return selectedPrefixText
     }
-
+    
     console.log(content)
 }
 
