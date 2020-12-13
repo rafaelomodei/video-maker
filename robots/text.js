@@ -6,22 +6,41 @@
 ### Dependencia
  $ npm i algorithmia
  $ npm i sbd
+ $ npm install watson-developer-cloud
 */
 
 
 const algorithmia = require('algorithmia')
 const algorithimiaApiKey = require('../credencials/algorithimia.json').apiKey
 const sentenceBoundaryDetection = require('sbd')
+const watsonApiKey = require('../credencials/watson-nlu.json').apikey
+const NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
+ 
+var nlu = new NaturalLanguageUnderstandingV1({
+    iam_apikey: watsonApiKey,
+    version: '2019-02-01',
+    url: 'https://gateway.watsonplatform.net/natural-language-understanding/api/'
+  })
+
+
+
 //Função async pq tem que aguardar os dados serem buscados e retornados
 async function robot(content){
+    //Pesquisa na Wikipedia
+    //Divide o texto em sentenças
+    //Limpa o toda a pesquisa
+    //Limite maximo desentenças
+    //Recebe as sentenças
     await fetchContentFromWikiPedia(content)
     sanitizeContent(content)
     breakContentIntoSentences(content)
+    limitMaximunSenteces(content)
+    await fetchKeywordsOfAllSentences(content)
 
-    async function fetchContentFromWikiPedia(conten){
+    async function fetchContentFromWikiPedia(content){
         const algorithmiaAuthenticated = algorithmia(algorithimiaApiKey)
         const wikipediaAlgorithm = algorithmiaAuthenticated.algo("web/WikipediaParser/0.1.2")
-        const wikipediaResponde = await wikipediaAlgorithm.pipe(conten.searchTerm)
+        const wikipediaResponde = await wikipediaAlgorithm.pipe(content.searchTerm)
         const wikipediaContent = wikipediaResponde.get()
 
         content.sourceContentOriginal = wikipediaContent.content
@@ -71,6 +90,47 @@ async function robot(content){
             })
         })
     }
+
+
+    //Limita a quantidade de sentenças
+    function limitMaximunSenteces(content){
+        //Pega da posição 0 até a sentença maxima
+        content.sentences = content.sentences.slice(0, content.maximunSentences)
+    }
+
+    //Pegar as Keywords passada pelo watson
+    async function fetchKeywordsOfAllSentences(content){
+        for(const sentence of content.sentences){
+            //Passa o texto das sentenças para o watson e ele retorna as sentenças
+            sentence.keywords = await fetcWatsonAndReturnKeywords(sentence.text)
+        }
+    }
+
+    //Retorna as tags que vai ser usado para pesquisar no google img
+    //Aqui estamos retornando apenas as Keywords, mas é possivel retornar muito mais
+    //Watson <3
+    async function fetcWatsonAndReturnKeywords(sentence){
+    return new Promise((resolve, reject) =>{
+     nlu.analyze({
+         text: sentence,
+         features:{
+             keywords: {}
+         }
+     }, (error, response) =>{
+         if(error){
+             throw error
+         }
+         const keywords = response.keywords.map((keywords) =>{
+             return keywords.text
+         })
+ 
+         resolve(keywords)
+ 
+     })
+    })
+    
+     
+ }
 
 }
 
