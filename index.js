@@ -20,15 +20,15 @@ const robots = {
 
 async function start(){
 
-    Robôs
-    robots.input()
-    await robots.text()
+   // Robôs
+   // robots.input()
+    //await robots.text()
     await robots.image()
     
-    const content = robots.state.load()
+    //const content = robots.state.load()
     //imprime que nem o log porem de uma forma mais bonita
     //usando o dir com depth: null
-    console.dir(content, {depth: null})
+    //console.dir(content, {depth: null})
 }
 
 start()
