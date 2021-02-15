@@ -1,6 +1,8 @@
 const gm = require('gm').subClass({imageMagick: true}) //para editar as imagens
 const state = require('./state.js')
-
+const spawn = require('child_process').spawn //deixa executar varios processo/progamas ao mesmo tempo com o node
+const path = require('path')
+const rootPath = path.resolve(__dirname, '..')
 
 async function robot(){
 
@@ -13,7 +15,14 @@ async function robot(){
     //Cria os textos que vai aparecer em cada senteça
     await createAllSentencesImages(content)
 
+    //Cria tumbnail para o youtube
     await createYouTubeThumbnail()
+    
+    //scripit que vai rodar no after effects
+    await createAfterEffectScript(content)
+
+    //renderizar o video com after effects
+    await renderVideoWithAfterEffects()
 
     state.save(content)
 
@@ -140,6 +149,41 @@ async function robot(){
                 })
         })
     }
+
+
+    async function createAfterEffectScript(content){
+        await state.saveScript(content)
+    }
+
+    //Rendereza o video com aerender
+    async function renderVideoWithAfterEffects(){
+        return new Promise((resolve, reject) =>{
+            const aerenderFilePath = 'C:/Program Files/Adobe/Adobe After Effects 2020/Support Files/aerender.exe' //Local que se encontra o aerender
+            const templateFilePath = `${rootPath}/templates/1/template.aep` //Aqui pode ter varios templaites
+            const destinationFilePath = `${rootPath}/content/output.mp4` //destino de saida do video
+
+            console.log('> Iniciando After Effects')
+
+            const aerender = spawn(aerenderFilePath, [ //aerenderFilePath é onde fica o binario
+                '-comp', 'main', //a composição que nos querremos renderizar
+                '-project', templateFilePath, //o template
+                '-output', destinationFilePath //arquivo de saida
+            ])
+
+            //Log printado no terminal, para acompanhar o processo de renderização
+            aerender.stdout.on('data', (data) =>{
+                process.stdout.write(data)
+            })
+
+            //fecha o after
+            aerender.on('close', () =>{
+                console.log('> Finalizando After Effects')
+                resolve()
+            } )
+
+        })
+    }
+
 }
 
 module.exports = robot
